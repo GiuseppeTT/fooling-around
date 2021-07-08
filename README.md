@@ -1,3 +1,3 @@
-# fooling-around
+# Fooling around
 
  Some quick projects.
