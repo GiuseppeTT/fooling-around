@@ -13,3 +13,4 @@ For more information about the project structure, check the [`{structured}`](htt
 - Maybe add some exploratory data analysis. Just for the fun.
 - Add `parsnip::boost_tree` model to `workflows`.
 - Use `{tidyposterior}` to compare models.
+- Use `{DALEX}` to interpret final model.
