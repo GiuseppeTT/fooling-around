@@ -55,7 +55,7 @@ predictive_prior_targets <- list(
     ),
     tar_file(
         predictive_prior_file,
-        "stan/complete-pooling/predictive_prior.stan"
+        "stan/partial-pooling/predictive_prior.stan"
     ),
     tar_target(
         predictive_prior_model,
@@ -82,6 +82,10 @@ predictive_prior_targets <- list(
     )
 )
 
+# TODO
+exploratory_targets <- list(
+)
+
 model_targets <- list(
     tar_target(
         model_data,
@@ -93,7 +97,7 @@ model_targets <- list(
     ),
     tar_file(
         model_file,
-        "stan/complete-pooling/model.stan"
+        "stan/partial-pooling/model.stan"
     ),
     tar_target(
         model,
@@ -123,13 +127,14 @@ predictive_posterior_targets <- list(
         list(
             time_count = 252,  # One year
             stock_count = stock_count,
-            mean_return = posterior_estimates["mean_return"],
-            volatility = posterior_estimates["volatility"]
+            # TODO: automate this
+            mean_returns_standard_deviation = posterior_estimates["mean_returns_standard_deviation"],
+            volatilities_standard_deviation = posterior_estimates["volatilities_standard_deviation"]
         )
     ),
     tar_file(
         predictive_posterior_file,
-        "stan/complete-pooling/predictive_posterior.stan"
+        "stan/partial-pooling/predictive_posterior.stan"
     ),
     tar_target(
         predictive_posterior_model,
@@ -156,6 +161,7 @@ predictive_posterior_targets <- list(
     )
 )
 
+# TODO
 diagnostic_targets <- list(
 )
 
@@ -164,6 +170,7 @@ summary_targets <- list(
         parameters_summary_table,
         tabularize_parameters(posterior_sample)
     ),
+    # TODO: plot together parameters such as mean_returns[stock]
     tar_target(
         parameters_summary_plot,
         plot_parameters(posterior_sample)
@@ -181,6 +188,7 @@ report_targets <- list(
 list(
     data_targets,
     predictive_prior_targets,
+    exploratory_targets,
     model_targets,
     predictive_posterior_targets,
     diagnostic_targets,
