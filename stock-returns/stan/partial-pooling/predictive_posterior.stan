@@ -2,15 +2,17 @@ data {
     int<lower=0> time_count;
     int<lower=0> stock_count;
 
-    real mean_returns_mean;
     real<lower=0> mean_returns_standard_deviation;
-    real<lower=0> volatilities_mean;
+    real<lower=0> volatilities_standard_deviation;
 }
 generated quantities {
+    vector[stock_count] mean_returns;
+    vector<lower=0>[stock_count] volatilities;
+
     matrix[stock_count, time_count] returns;
 
     for (stock in 1:stock_count)
-        mean_returns[stock] = normal_rng(mean_returns_mean, mean_returns_standard_deviation);
+        mean_returns[stock] = normal_rng(0, mean_returns_standard_deviation);
 
     for (stock in 1:stock_count)
         volatilities[stock] = fabs(normal_rng(0, volatilities_standard_deviation));
