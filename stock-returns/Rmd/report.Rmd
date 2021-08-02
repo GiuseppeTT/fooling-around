@@ -1,0 +1,73 @@
+---
+title: Stock returns
+author: Giuseppe Tinti Tomio
+output: html_document
+---
+
+```{r setup, include = FALSE}
+# Set knitr options ------------------------------------------------------------
+knitr::opts_chunk$set(
+    echo = FALSE,
+    fig.align = "center"
+)
+
+# Load packages ----------------------------------------------------------------
+library(targets)
+
+library(tidyverse)
+library(gt)
+
+# Source auxiliary R files -----------------------------------------------------
+```
+
+
+# Predictive prior check
+
+```{r prior returns, message=FALSE}
+tar_read(predictive_prior_return_plot)
+```
+
+```{r prior prices}
+tar_read(predictive_prior_price_plot)
+```
+
+
+# Predictive posterior check
+
+```{r posterior returns, message=FALSE}
+tar_read(predictive_posterior_return_plot)
+```
+
+```{r posterior prices}
+tar_read(predictive_posterior_price_plot)
+```
+
+
+# Posterior summary
+
+```{r posterior summary table}
+tar_read(parameters_summary_table) %>%
+    select(
+        Variable = variable,
+        Mean = mean,
+        Median = median,
+        MAD = mad,
+        SD = sd,
+        `CI 05%` = q5,
+        `CI 95%` = q95,
+        Rhat = rhat,
+        `ESS bulk` = ess_bulk,
+        `ESS tail` = ess_tail
+    ) %>%
+    gt(rowname_col = "Variable") %>%
+    fmt_percent(!c(Rhat, `ESS bulk`, `ESS tail`), decimals = 2) %>%
+    fmt_number(c(Rhat, `ESS bulk`, `ESS tail`), decimals = 2) %>%
+    fmt_number(c(`ESS bulk`, `ESS tail`), decimals = 0) %>%
+    tab_spanner("Statistics", !c(Rhat, `ESS bulk`, `ESS tail`)) %>%
+    tab_spanner("MCMC", c(Rhat, `ESS bulk`, `ESS tail`)) %>%
+    tab_header("Posterior summaries")
+```
+
+```{r posterior summary plot, fig.width = 12}
+tar_read(parameters_summary_plot)
+```

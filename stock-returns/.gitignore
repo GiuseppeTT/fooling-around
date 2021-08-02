@@ -1,5 +1,6 @@
+_targets/
 .DS_Store
 .Rdata
 .Rhistory
 .Rproj.user/
-
+whiteboard.R
