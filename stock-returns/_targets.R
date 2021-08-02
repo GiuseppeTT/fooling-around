@@ -11,7 +11,7 @@ library(rstan)
 library(tidybayes)
 #library(posterior)
 
-## Source auxiliar R files -----------------------------------------------------
+## Source auxiliary R files ----------------------------------------------------
 source("R/constants.R")
 source("R/auxiliary_functions.R")
 source("R/workflow_functions.R")
@@ -20,6 +20,7 @@ source("R/workflow_functions.R")
 options(mc.cores = parallel::detectCores())
 #rstan_options(auto_write = TRUE)
 set.seed(SEED)
+
 
 # Targets ----------------------------------------------------------------------
 data_targets <- list(
@@ -49,8 +50,8 @@ predictive_prior_targets <- list(
     tar_target(
         predictive_prior_data,
         list(
-            time_count = 252,  # One year
-            stock_count = stock_count
+            time_count = dim(returns)[1],
+            stock_count = dim(returns)[2]
         )
     ),
     tar_file(
@@ -74,16 +75,23 @@ predictive_prior_targets <- list(
     ),
     tar_target(
         predictive_prior_return_plot,
-        plot_returns(predictive_prior_sample)
+        plot_sampled_returns(predictive_prior_sample)
     ),
     tar_target(
         predictive_prior_price_plot,
-        plot_prices(predictive_prior_sample)
+        plot_sampled_prices(predictive_prior_sample)
     )
 )
 
-# TODO
 exploratory_targets <- list(
+    tar_target(
+        observed_return_plot,
+        plot_observed_returns(returns)
+    ),
+    tar_target(
+        observed_price_plot,
+        plot_observed_prices(returns)
+    )
 )
 
 model_targets <- list(
@@ -125,8 +133,8 @@ predictive_posterior_targets <- list(
     tar_target(
         predictive_posterior_data,
         list(
-            time_count = 252,  # One year
-            stock_count = stock_count,
+            time_count = dim(returns)[1],
+            stock_count = dim(returns)[2],
             # TODO: automate this
             mean_returns_standard_deviation = posterior_estimates["mean_returns_standard_deviation"],
             volatilities_standard_deviation = posterior_estimates["volatilities_standard_deviation"]
@@ -153,11 +161,11 @@ predictive_posterior_targets <- list(
     ),
     tar_target(
         predictive_posterior_return_plot,
-        plot_returns(predictive_posterior_sample)
+        plot_sampled_returns(predictive_posterior_sample)
     ),
     tar_target(
         predictive_posterior_price_plot,
-        plot_prices(predictive_posterior_sample)
+        plot_sampled_prices(predictive_posterior_sample)
     )
 )
 
@@ -178,6 +186,7 @@ summary_targets <- list(
 )
 
 report_targets <- list(
+    # TODO: enforce other targets dependency
     tar_render(
         report,
         "Rmd/report.Rmd",

@@ -66,6 +66,83 @@ slice_returns <- function(
     return(sliced_returns)
 }
 
+## Exploratory -----------------------------------------------------------------
+plot_observed_returns <- function(
+    returns
+) {
+    data <-
+        returns %>%
+        as_tibble() %>%
+        mutate(time = row_number(), .before = everything()) %>%
+        pivot_longer(!time, names_to = "stock", values_to = ".value")
+
+    plot <-
+        data %>%
+        plot_base_returns()
+
+    return(plot)
+}
+
+plot_base_returns <- function(
+    data
+) {
+    data <-
+        data %>%
+        mutate(return = expm1(.value))
+
+    plot <-
+        data %>%
+        ggplot(aes(x = return, group = stock)) +
+        geom_density() +
+        base_theme() +
+        labs(
+            title = "Return distributions",
+            x = "Return",
+            y = "Density"
+        )
+
+    return(plot)
+}
+
+plot_observed_prices <- function(
+    returns
+) {
+    data <-
+        returns %>%
+        as_tibble() %>%
+        mutate(time = row_number(), .before = everything()) %>%
+        pivot_longer(!time, names_to = "stock", values_to = ".value")
+
+    plot <-
+        data %>%
+        plot_base_prices()
+
+    return(plot)
+}
+
+plot_base_prices <- function(
+    data
+) {
+    data <-
+        data %>%
+        group_by(stock) %>%
+        mutate(price = exp(cumsum(zero_first(.value))))
+
+    plot <-
+        data %>%
+        ggplot(aes(x = time, y = price, group = stock)) +
+        geom_line() +
+        scale_y_log10() +
+        base_theme() +
+        labs(
+            title = "Prices",
+            x = "Time (in trading days)",
+            y = "Price"
+        )
+
+    return(plot)
+}
+
 ## Model -----------------------------------------------------------------------
 compile_model <- function(
     file
@@ -95,48 +172,32 @@ estimate_posteriors <- function(
         return()
 }
 
-plot_returns <- function(
+plot_sampled_returns <- function(
     predictive_sample
 ) {
+    # TODO: speed up
     data <-
         predictive_sample %>%
-        gather_draws(returns[stock, time]) %>%
-        mutate(return = expm1(.value))
+        gather_draws(returns[stock, time])
 
     plot <-
         data %>%
-        ggplot(aes(x = return, group = stock)) +
-        geom_density() +
-        base_theme() +
-        labs(
-            title = "Return distributions",
-            x = "Return",
-            y = "Density"
-        )
+        plot_base_returns()
 
     return(plot)
 }
 
-plot_prices <- function(
+plot_sampled_prices <- function(
     predictive_sample
 ) {
+    # TODO: speed up
     data <-
         predictive_sample %>%
-        gather_draws(returns[stock, time]) %>%
-        group_by(stock) %>%
-        mutate(price = exp(cumsum(zero_first(.value))))
+        gather_draws(returns[stock, time])
 
     plot <-
         data %>%
-        ggplot(aes(x = time, y = price, group = stock)) +
-        geom_line() +
-        scale_y_log10() +
-        base_theme() +
-        labs(
-            title = "Prices",
-            x = "Time (in trading days)",
-            y = "Price"
-        )
+        plot_base_prices()
 
     return(plot)
 }

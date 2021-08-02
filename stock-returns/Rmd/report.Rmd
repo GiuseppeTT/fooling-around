@@ -23,7 +23,7 @@ library(gt)
 
 # Predictive prior check
 
-```{r prior returns, message=FALSE}
+```{r prior returns}
 tar_read(predictive_prior_return_plot)
 ```
 
@@ -32,9 +32,20 @@ tar_read(predictive_prior_price_plot)
 ```
 
 
+# Exploratory analysis
+
+```{r observed returns}
+tar_read(observed_return_plot)
+```
+
+```{r observed prices}
+tar_read(observed_price_plot)
+```
+
+
 # Predictive posterior check
 
-```{r posterior returns, message=FALSE}
+```{r posterior returns}
 tar_read(predictive_posterior_return_plot)
 ```
 
@@ -68,6 +79,6 @@ tar_read(parameters_summary_table) %>%
     tab_header("Posterior summaries")
 ```
 
-```{r posterior summary plot, fig.width = 12}
+```{r posterior summary plot}
 tar_read(parameters_summary_plot)
 ```
