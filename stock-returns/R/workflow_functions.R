@@ -165,7 +165,7 @@ plot_parameters <- function(
         data %>%
         ggplot(aes(x = .value)) +
         geom_density() +
-        facet_wrap(~ .variable, scales = "free") +
+        facet_wrap(~ .variable, ncol = 1, scales = "free") +
         base_theme() +
         labs(
             title = "Posterior distributions",
