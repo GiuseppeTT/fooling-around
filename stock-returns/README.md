@@ -4,7 +4,7 @@
 This is a cool project!
 
 ## How to run
-It is easy, just run script `analysis.R`.
+It is easy, just run script `script/run.R`.
 
 ## TODO
 - Compare posteriors to observeds
