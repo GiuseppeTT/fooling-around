@@ -132,12 +132,12 @@ predictive_posterior_targets <- list(
     ),
     tar_target(
         predictive_posterior_data,
-        list(
-            time_count = dim(returns)[1],
-            stock_count = dim(returns)[2],
-            # TODO: automate this
-            mean_returns_standard_deviation = posterior_estimates["mean_returns_standard_deviation"],
-            volatilities_standard_deviation = posterior_estimates["volatilities_standard_deviation"]
+        c(
+            list(
+                time_count = dim(returns)[1],
+                stock_count = dim(returns)[2]
+            ),
+            posterior_estimates
         )
     ),
     tar_file(
