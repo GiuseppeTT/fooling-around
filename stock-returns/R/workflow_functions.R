@@ -72,9 +72,7 @@ plot_observed_returns <- function(
 ) {
     data <-
         returns %>%
-        as_tibble() %>%
-        mutate(time = row_number(), .before = everything()) %>%
-        pivot_longer(!time, names_to = "stock", values_to = ".value")
+        tidy_returns()
 
     plot <-
         data %>%
@@ -109,9 +107,7 @@ plot_observed_prices <- function(
 ) {
     data <-
         returns %>%
-        as_tibble() %>%
-        mutate(time = row_number(), .before = everything()) %>%
-        pivot_longer(!time, names_to = "stock", values_to = ".value")
+        tidy_returns()
 
     plot <-
         data %>%
@@ -141,6 +137,16 @@ plot_base_prices <- function(
         )
 
     return(plot)
+}
+
+tidy_returns <- function(
+    returns
+) {
+    returns %>%
+        as_tibble() %>%
+        mutate(time = row_number(), .before = everything()) %>%
+        pivot_longer(!time, names_to = "stock", values_to = ".value") %>%
+        return()
 }
 
 ## Model -----------------------------------------------------------------------
@@ -175,10 +181,9 @@ estimate_posteriors <- function(
 plot_sampled_returns <- function(
     predictive_sample
 ) {
-    # TODO: speed up
     data <-
         predictive_sample %>%
-        gather_draws(returns[stock, time])
+        tidy_predictive_sample()
 
     plot <-
         data %>%
@@ -190,16 +195,37 @@ plot_sampled_returns <- function(
 plot_sampled_prices <- function(
     predictive_sample
 ) {
-    # TODO: speed up
     data <-
         predictive_sample %>%
-        gather_draws(returns[stock, time])
+        tidy_predictive_sample()
 
     plot <-
         data %>%
         plot_base_prices()
 
     return(plot)
+}
+
+tidy_predictive_sample <- function(
+    predictive_sample
+) {
+    data <-
+        predictive_sample %>%
+        tidy_draws() %>%
+        gather_variables()
+
+    data <-
+        data %>%
+        filter(str_detect(.variable, r"(^returns\[\d+,\d+\]$)"))
+
+    data <-
+        data %>%
+        mutate(
+            stock = as.numeric(str_match(.variable, r"(returns\[(\d+),(\d+)\])")[, 2]),
+            time = as.numeric(str_match(.variable, r"(returns\[(\d+),(\d+)\])")[, 3])
+        )
+
+    return(data)
 }
 
 tabularize_parameters <- function(
