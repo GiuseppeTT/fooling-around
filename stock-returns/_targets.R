@@ -187,7 +187,6 @@ summary_targets <- list(
 )
 
 report_targets <- list(
-    # TODO: enforce other targets dependency
     # TODO: consider using flexdashboard
     tar_render(
         report,
