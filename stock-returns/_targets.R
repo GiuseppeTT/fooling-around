@@ -5,11 +5,9 @@ library(tarchetypes)
 
 library(tidyverse)
 library(lubridate)
-#library(gt)
 
 library(rstan)
 library(tidybayes)
-#library(posterior)
 
 ## Source auxiliary R files ----------------------------------------------------
 source("R/constants.R")
@@ -20,7 +18,6 @@ source("R/workflow_functions.R")
 set.seed(SEED)
 
 options(mc.cores = parallel::detectCores())
-#rstan_options(auto_write = TRUE)
 
 
 # Targets ----------------------------------------------------------------------
@@ -187,7 +184,6 @@ summary_targets <- list(
 )
 
 report_targets <- list(
-    # TODO: consider using flexdashboard
     tar_render(
         report,
         "Rmd/report.Rmd",
