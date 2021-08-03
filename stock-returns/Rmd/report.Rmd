@@ -22,6 +22,8 @@ library(tidyverse)
 library(gt)
 
 # Source auxiliary R files -----------------------------------------------------
+source("R/constants.R")
+source("R/auxiliary_functions.R")
 ```
 
 
@@ -83,6 +85,7 @@ tar_read(parameters_summary_table) %>%
     tab_header("Posterior summaries")
 ```
 
-```{r posterior summary plot}
-tar_read(parameters_summary_plot)
+```{r posterior summary plots}
+for (plot in tar_read(parameters_summary_plots))
+    print(plot)
 ```

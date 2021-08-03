@@ -245,20 +245,37 @@ plot_parameters <- function(
         posterior_sample %>%
         tidy_draws() %>%
         gather_variables() %>%
-        filter(str_detect(.variable, "__$", negate = TRUE)) %>%
-        mutate(.variable = humanize_string(.variable))
+        filter(str_detect(.variable, "__$", negate = TRUE))
 
-    plot <-
+    data <-
         data %>%
-        ggplot(aes(x = .value)) +
-        geom_density() +
-        facet_wrap(~ .variable, ncol = 1, scales = "free") +
-        base_theme() +
-        labs(
-            title = "Posterior distributions",
-            x = NULL,
-            y = NULL
-        )
+        mutate(.variable_index = str_extract(.variable, r"(\[\d+\])")) %>%
+        mutate(.variable_index = if_else(is.na(.variable_index), .variable, .variable_index)) %>%
+        mutate(.variable = str_remove(.variable, r"(\[\d+\])"))
 
-    return(plot)
+    plots <-
+        data %>%
+        group_by(.variable) %>%
+        group_map(function(data, ...) {
+            variable <-
+                data %>%
+                pull(.variable) %>%
+                magrittr::extract(1) %>%
+                humanize_string()
+
+            plot <-
+                data %>%
+                ggplot(aes(x = .value, group = .variable_index)) +
+                geom_density() +
+                base_theme() +
+                labs(
+                    title = variable,
+                    x = NULL,
+                    y = NULL
+                )
+
+            return(plot)
+        }, .keep = TRUE)
+
+    return(plots)
 }

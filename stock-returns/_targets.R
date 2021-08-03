@@ -178,7 +178,7 @@ summary_targets <- list(
     ),
     # TODO: plot together parameters such as mean_returns[stock]
     tar_target(
-        parameters_summary_plot,
+        parameters_summary_plots,
         plot_parameters(posterior_sample)
     )
 )
