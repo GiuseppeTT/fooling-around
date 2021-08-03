@@ -17,9 +17,10 @@ source("R/auxiliary_functions.R")
 source("R/workflow_functions.R")
 
 ## Set options -----------------------------------------------------------------
+set.seed(SEED)
+
 options(mc.cores = parallel::detectCores())
 #rstan_options(auto_write = TRUE)
-set.seed(SEED)
 
 
 # Targets ----------------------------------------------------------------------
@@ -187,6 +188,7 @@ summary_targets <- list(
 
 report_targets <- list(
     # TODO: enforce other targets dependency
+    # TODO: consider using flexdashboard
     tar_render(
         report,
         "Rmd/report.Rmd",
