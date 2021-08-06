@@ -1,11 +1,11 @@
 # Define auxiliary functions ---------------------------------------------------
-zero_first <- function(
-    x
-) {
-    x[1] <- 0
+# zero_first <- function(
+#     x
+# ) {
+#     x[1] <- 0
 
-    return(x)
-}
+#     return(x)
+# }
 
 base_theme <- function(
 

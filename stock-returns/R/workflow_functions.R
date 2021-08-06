@@ -53,205 +53,151 @@ clean_returns <- function(
 
 slice_returns <- function(
     returns,
-    stock_count
+    time_count = NULL,
+    stock_count = NULL
 ) {
+    sliced_returns <- returns
+
+    max_time_count <- dim(returns)[1]
+    if (!is.null(time_count) & time_count < max_time_count) {
+        time_indices <- tail(seq(max_time_count), time_count)
+        sliced_returns <- sliced_returns[time_indices, ]
+    } else {
+        sliced_returns <- sliced_returns
+    }
+
     max_stock_count <- dim(returns)[2]
     if (!is.null(stock_count) & stock_count < max_stock_count) {
         stock_indices <- sample.int(max_stock_count, stock_count)
-        sliced_returns <- returns[, stock_indices]
+        sliced_returns <- sliced_returns[, stock_indices]
     } else {
-        sliced_returns <- returns
+        sliced_returns <- sliced_returns
     }
 
     return(sliced_returns)
 }
 
 ## Exploratory -----------------------------------------------------------------
-plot_observed_returns <- function(
-    returns
-) {
-    data <-
-        returns %>%
-        tidy_returns()
+# plot_observed_returns <- function(
+#     returns
+# ) {
+#     data <-
+#         returns %>%
+#         tidy_returns()
 
-    plot <-
-        data %>%
-        plot_base_returns()
+#     plot <-
+#         data %>%
+#         plot_base_returns()
 
-    return(plot)
-}
+#     return(plot)
+# }
 
-plot_base_returns <- function(
-    data
-) {
-    data <-
-        data %>%
-        mutate(return = expm1(.value))
+# plot_base_returns <- function(
+#     data
+# ) {
+#     data <-
+#         data %>%
+#         mutate(return = expm1(.value))
 
-    plot <-
-        data %>%
-        ggplot(aes(x = return, group = stock)) +
-        geom_density() +
-        base_theme() +
-        labs(
-            title = "Return distributions",
-            x = "Return",
-            y = "Density"
-        )
+#     plot <-
+#         data %>%
+#         ggplot(aes(x = return, group = stock)) +
+#         geom_density() +
+#         base_theme() +
+#         labs(
+#             title = "Return distributions",
+#             x = "Return",
+#             y = "Density"
+#         )
 
-    return(plot)
-}
+#     return(plot)
+# }
 
-plot_observed_prices <- function(
-    returns
-) {
-    data <-
-        returns %>%
-        tidy_returns()
+# plot_observed_prices <- function(
+#     returns
+# ) {
+#     data <-
+#         returns %>%
+#         tidy_returns()
 
-    plot <-
-        data %>%
-        plot_base_prices()
+#     plot <-
+#         data %>%
+#         plot_base_prices()
 
-    return(plot)
-}
+#     return(plot)
+# }
 
-plot_base_prices <- function(
-    data
-) {
-    data <-
-        data %>%
-        group_by(stock) %>%
-        mutate(price = exp(cumsum(zero_first(.value))))
+# plot_base_prices <- function(
+#     data
+# ) {
+#     data <-
+#         data %>%
+#         group_by(stock) %>%
+#         mutate(price = exp(cumsum(zero_first(.value))))
 
-    plot <-
-        data %>%
-        ggplot(aes(x = time, y = price, group = stock)) +
-        geom_line() +
-        scale_y_log10() +
-        base_theme() +
-        labs(
-            title = "Prices",
-            x = "Time (in trading days)",
-            y = "Price"
-        )
+#     plot <-
+#         data %>%
+#         ggplot(aes(x = time, y = price, group = stock)) +
+#         geom_line() +
+#         scale_y_log10() +
+#         base_theme() +
+#         labs(
+#             title = "Prices",
+#             x = "Time (in trading days)",
+#             y = "Price"
+#         )
 
-    return(plot)
-}
+#     return(plot)
+# }
 
-tidy_returns <- function(
-    returns
-) {
-    returns %>%
-        as_tibble() %>%
-        mutate(time = row_number(), .before = everything()) %>%
-        pivot_longer(!time, names_to = "stock", values_to = ".value") %>%
-        return()
-}
+# tidy_returns <- function(
+#     returns
+# ) {
+#     returns %>%
+#         as_tibble() %>%
+#         mutate(time = row_number(), .before = everything()) %>%
+#         pivot_longer(!time, names_to = "stock", values_to = ".value") %>%
+#         return()
+# }
 
 ## Model -----------------------------------------------------------------------
-compile_model <- function(
-    file
+filter_parameters <- function(
+    data
 ) {
-    file %>%
-        stan_model() %>%
+    data %>%
+        filter(str_detect(.variable, "__$", negate = TRUE)) %>%
+        filter(str_detect(.variable, "^std_", negate = TRUE)) %>%
         return()
 }
 
-sample_model <- function(
-    model,
-    data,
-    ...
+tidy_stan_summary <- function(
+    data
 ) {
-    model %>%
-        sampling(data, ...) %>%
+    data %>%
+        select(!.join_data) %>%
+        rename(.variable = variable) %>%
+        filter_parameters() %>%
         return()
 }
 
-estimate_posteriors <- function(
-    posterior_sample
+tidy_stan_draws <- function(
+    data
 ) {
-    posterior_sample %>%
-        summarise_draws() %>%
-        select(variable, median) %>%
-        deframe() %>%
-        return()
-}
-
-plot_sampled_returns <- function(
-    predictive_sample
-) {
-    data <-
-        predictive_sample %>%
-        tidy_predictive_sample()
-
-    plot <-
-        data %>%
-        plot_base_returns()
-
-    return(plot)
-}
-
-plot_sampled_prices <- function(
-    predictive_sample
-) {
-    data <-
-        predictive_sample %>%
-        tidy_predictive_sample()
-
-    plot <-
-        data %>%
-        plot_base_prices()
-
-    return(plot)
-}
-
-tidy_predictive_sample <- function(
-    predictive_sample
-) {
-    data <-
-        predictive_sample %>%
-        tidy_draws() %>%
-        gather_variables()
-
-    data <-
-        data %>%
-        filter(str_detect(.variable, r"(^returns\[\d+,\d+\]$)"))
-
-    data <-
-        data %>%
-        mutate(
-            stock = as.numeric(str_match(.variable, r"(returns\[(\d+),(\d+)\])")[, 2]),
-            time = as.numeric(str_match(.variable, r"(returns\[(\d+),(\d+)\])")[, 3])
-        )
-
-    return(data)
-}
-
-tabularize_parameters <- function(
-    posterior_sample
-) {
-    posterior_sample %>%
-        summarise_draws() %>%
-        filter(str_detect(variable, "__$", negate = TRUE)) %>%
-        mutate(variable = humanize_string(variable)) %>%
+    data %>%
+        gather_variables() %>%
+        filter(str_detect(.variable, "__$", negate = TRUE)) %>%
+        filter(str_detect(.variable, "^std_", negate = TRUE)) %>%
         return()
 }
 
 plot_parameters <- function(
-    posterior_sample
+    data
 ) {
     data <-
-        posterior_sample %>%
-        tidy_draws() %>%
-        gather_variables() %>%
-        filter(str_detect(.variable, "__$", negate = TRUE))
-
-    data <-
         data %>%
-        mutate(.variable_index = str_extract(.variable, r"(\[\d+\])")) %>%
+        mutate(.variable_index = str_extract(.variable, r"(\[.+])")) %>%
         mutate(.variable_index = if_else(is.na(.variable_index), .variable, .variable_index)) %>%
-        mutate(.variable = str_remove(.variable, r"(\[\d+\])"))
+        mutate(.variable = str_remove(.variable, r"(\[.+])"))
 
     plots <-
         data %>%
@@ -279,3 +225,53 @@ plot_parameters <- function(
 
     return(plots)
 }
+
+# plot_sampled_returns <- function(
+#     predictive_sample
+# ) {
+#     data <-
+#         predictive_sample %>%
+#         tidy_predictive_sample()
+
+#     plot <-
+#         data %>%
+#         plot_base_returns()
+
+#     return(plot)
+# }
+
+# plot_sampled_prices <- function(
+#     predictive_sample
+# ) {
+#     data <-
+#         predictive_sample %>%
+#         tidy_predictive_sample()
+
+#     plot <-
+#         data %>%
+#         plot_base_prices()
+
+#     return(plot)
+# }
+
+# tidy_predictive_sample <- function(
+#     predictive_sample
+# ) {
+#     data <-
+#         predictive_sample %>%
+#         tidy_draws() %>%
+#         gather_variables()
+
+#     data <-
+#         data %>%
+#         filter(str_detect(.variable, r"(^returns\[\d+,\d+\]$)"))
+
+#     data <-
+#         data %>%
+#         mutate(
+#             stock = as.numeric(str_match(.variable, r"(returns\[(\d+),(\d+)\])")[, 2]),
+#             time = as.numeric(str_match(.variable, r"(returns\[(\d+),(\d+)\])")[, 3])
+#         )
+
+#     return(data)
+# }
