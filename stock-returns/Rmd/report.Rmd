@@ -6,6 +6,9 @@ output:
         toc: true
         toc_float: true
         toc_collapsed: true
+params:
+    parameter_table: NULL
+    parameter_plots: NULL
 ---
 
 ```{r setup, include = FALSE}
@@ -20,6 +23,7 @@ library(targets)
 
 library(tidyverse)
 library(gt)
+library(DT)
 
 # Source auxiliary R files -----------------------------------------------------
 source("R/constants.R")
@@ -27,45 +31,14 @@ source("R/auxiliary_functions.R")
 ```
 
 
-# Predictive prior check
+# Parameter posteriors
 
-```{r prior returns}
-tar_read(predictive_prior_return_plot)
-```
-
-```{r prior prices}
-tar_read(predictive_prior_price_plot)
-```
-
-
-# Exploratory analysis
-
-```{r observed returns}
-tar_read(observed_return_plot)
-```
-
-```{r observed prices}
-tar_read(observed_price_plot)
-```
-
-
-# Predictive posterior check
-
-```{r posterior returns}
-tar_read(predictive_posterior_return_plot)
-```
-
-```{r posterior prices}
-tar_read(predictive_posterior_price_plot)
-```
-
-
-# Posterior summary
-
-```{r posterior summary table}
-tar_read(parameters_summary_table) %>%
+```{r parameter summary table}
+params$parameter_table %>%
+    filter(str_detect(.variable, "\\[.+\\]$", negate = TRUE)) %>%
+    mutate(.variable = humanize_string(.variable)) %>%
     select(
-        Variable = variable,
+        Variable = .variable,
         Mean = mean,
         Median = median,
         MAD = mad,
@@ -78,14 +51,51 @@ tar_read(parameters_summary_table) %>%
     ) %>%
     gt(rowname_col = "Variable") %>%
     fmt_percent(!c(Rhat, `ESS bulk`, `ESS tail`), decimals = 2) %>%
-    fmt_number(c(Rhat, `ESS bulk`, `ESS tail`), decimals = 2) %>%
+    fmt_number(c(Rhat), decimals = 2) %>%
     fmt_number(c(`ESS bulk`, `ESS tail`), decimals = 0) %>%
     tab_spanner("Statistics", !c(Rhat, `ESS bulk`, `ESS tail`)) %>%
     tab_spanner("MCMC", c(Rhat, `ESS bulk`, `ESS tail`)) %>%
-    tab_header("Posterior summaries")
+    tab_header("Parameter summaries")
 ```
 
-```{r posterior summary plots}
-for (plot in tar_read(parameters_summary_plots))
+```{r parameter table}
+params$parameter_table %>%
+    select(
+        Variable = .variable,
+        Mean = mean,
+        Median = median,
+        MAD = mad,
+        SD = sd,
+        `CI 05%` = q5,
+        `CI 95%` = q95,
+        Rhat = rhat,
+        `ESS bulk` = ess_bulk,
+        `ESS tail` = ess_tail
+    ) %>%
+    datatable(
+        caption = htmltools::tags$caption(
+            "Parameters",
+            style = "text-align: center; font-size: 200%; color: black;",
+        ),
+        rownames = FALSE,
+        filter = "top",
+        options = list(lengthChange = FALSE, searching = FALSE)
+    ) %>%
+    formatPercentage(
+        c("Mean", "Median", "SD", "MAD", "CI 05%", "CI 95%"),
+        digits = 2
+    ) %>%
+    formatRound(
+        c("Rhat"),
+        digits = 2
+    ) %>%
+    formatRound(
+        c("ESS bulk", "ESS tail"),
+        digits = 0
+    )
+```
+
+```{r parameter plots}
+for (plot in params$parameter_plots)
     print(plot)
 ```

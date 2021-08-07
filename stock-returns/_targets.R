@@ -50,12 +50,12 @@ data_targets <- list(
 )
 
 stan_targets <- list(
-    tar_stan_mcmc(
+    tar_stan_vb(
         stan,
         stan_files = c(
             complete_pooling = "stan/complete-pooling.stan",
-            partial_pooling = "stan/partial-pooling.stan",
-            correlated_partial_pooling = "stan/correlated-partial-pooling.stan"
+            partial_pooling = "stan/partial-pooling.stan"#,
+            #correlated_partial_pooling = "stan/correlated-partial-pooling.stan"
         ),
         data = list(
             time_count = dim(returns)[1],
@@ -64,8 +64,9 @@ stan_targets <- list(
         ),
         quiet = FALSE,
         pedantic = TRUE,
-        iter_warmup = SAMPLE_COUNT,
-        iter_sampling = SAMPLE_COUNT
+        iter = ITER_COUNT,
+        tol_rel_obj = TOLERANCE,
+        output_samples = SAMPLE_COUNT
     ),
     complement_stan_mcmc(
         stan,
@@ -74,14 +75,32 @@ stan_targets <- list(
     complement_stan_mcmc(
         stan,
         partial_pooling
+    )
+)
+
+report_targets <- list(
+    tar_render(
+        complete_pooling_report,
+        "Rmd/report.Rmd",
+        params = list(
+            parameter_table = stan_parameter_table_complete_pooling,
+            parameter_plots = stan_parameter_plots_complete_pooling
+        ),
+        output_file = "../output/complete_pooling_report.html"
     ),
-    complement_stan_mcmc(
-        stan,
-        correlated_partial_pooling
+    tar_render(
+        partial_pooling_report,
+        "Rmd/report.Rmd",
+        params = list(
+            parameter_table = stan_parameter_table_partial_pooling,
+            parameter_plots = stan_parameter_plots_partial_pooling
+        ),
+        output_file = "../output/partial_pooling_report.html"
     )
 )
 
 list(
     data_targets,
-    stan_targets
+    stan_targets,
+    report_targets
 )

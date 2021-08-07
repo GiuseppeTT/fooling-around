@@ -53,13 +53,13 @@ clean_returns <- function(
 
 slice_returns <- function(
     returns,
-    time_count = NULL,
-    stock_count = NULL
+    time_count = Inf,
+    stock_count = Inf
 ) {
     sliced_returns <- returns
 
     max_time_count <- dim(returns)[1]
-    if (!is.null(time_count) & time_count < max_time_count) {
+    if (time_count < max_time_count) {
         time_indices <- tail(seq(max_time_count), time_count)
         sliced_returns <- sliced_returns[time_indices, ]
     } else {
@@ -67,7 +67,7 @@ slice_returns <- function(
     }
 
     max_stock_count <- dim(returns)[2]
-    if (!is.null(stock_count) & stock_count < max_stock_count) {
+    if (stock_count < max_stock_count) {
         stock_indices <- sample.int(max_stock_count, stock_count)
         sliced_returns <- sliced_returns[, stock_indices]
     } else {
@@ -209,10 +209,19 @@ plot_parameters <- function(
                 magrittr::extract(1) %>%
                 humanize_string()
 
+            variable_index_count <-
+                data %>%
+                pull(.variable_index) %>%
+                unique() %>%
+                length()
+
+            alpha_level <- 50 * 1 / variable_index_count
+            alpha_level <- min(alpha_level, 1)
+
             plot <-
                 data %>%
                 ggplot(aes(x = .value, group = .variable_index)) +
-                geom_density() +
+                geom_density(color = alpha("black", alpha_level)) +
                 base_theme() +
                 labs(
                     title = variable,
