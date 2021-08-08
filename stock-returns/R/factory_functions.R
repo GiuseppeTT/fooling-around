@@ -1,6 +1,6 @@
 # Define factory functions -----------------------------------------------------
 ## Stan ------------------------------------------------------------------------
-complement_stan_mcmc <- function(
+tar_complement_stan <- function(
     name,
     model
 ) {
