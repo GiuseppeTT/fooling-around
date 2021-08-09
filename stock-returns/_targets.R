@@ -84,6 +84,10 @@ stan_targets <- list(
 )
 
 report_targets <- list(
+    tar_target(
+        decimal_count,
+        DECIMAL_COUNT
+    ),
     tar_render(
         complete_pooling_report,
         "Rmd/report.Rmd",

@@ -30,6 +30,10 @@ source("R/constants.R")
 source("R/auxiliary_functions.R")
 ```
 
+```{r common}
+decimal_count <- tar_read(decimal_count)
+```
+
 
 # Parameter posteriors
 
@@ -50,11 +54,26 @@ params$parameter_table %>%
         `ESS tail` = ess_tail
     ) %>%
     gt(rowname_col = "Variable") %>%
-    fmt_percent(!c(Rhat, `ESS bulk`, `ESS tail`), decimals = 2) %>%
-    fmt_number(c(Rhat), decimals = 2) %>%
-    fmt_number(c(`ESS bulk`, `ESS tail`), decimals = 0) %>%
-    tab_spanner("Statistics", !c(Rhat, `ESS bulk`, `ESS tail`)) %>%
-    tab_spanner("MCMC", c(Rhat, `ESS bulk`, `ESS tail`)) %>%
+    fmt_percent(
+        !c(Rhat, `ESS bulk`, `ESS tail`),
+        decimals = decimal_count
+    ) %>%
+    fmt_percent(
+        c(Rhat),
+        decimals = 0
+    ) %>%
+    fmt_number(
+        c(`ESS bulk`, `ESS tail`),
+        decimals = 0
+    ) %>%
+    tab_spanner(
+        "Statistics",
+        !c(Rhat, `ESS bulk`, `ESS tail`)
+    ) %>%
+    tab_spanner(
+        "MCMC",
+        c(Rhat, `ESS bulk`, `ESS tail`)
+    ) %>%
     tab_header("Parameter summaries")
 ```
 
@@ -83,11 +102,11 @@ params$parameter_table %>%
     ) %>%
     formatPercentage(
         c("Mean", "Median", "SD", "MAD", "CI 05%", "CI 95%"),
-        digits = 2
+        digits = decimal_count
     ) %>%
-    formatRound(
+    formatPercentage(
         c("Rhat"),
-        digits = 2
+        digits = 0
     ) %>%
     formatRound(
         c("ESS bulk", "ESS tail"),

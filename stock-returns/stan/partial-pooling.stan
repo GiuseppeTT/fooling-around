@@ -18,8 +18,8 @@ parameters {
     vector<lower=0>[stock_count] std_volatilities;
 }
 model {
-    std_mean_returns_location ~ normal(0.0, 1.0);
-    std_mean_returns_scale ~ normal(0.0, 1.0);
+    std_mean_returns_location ~ normal(0.0, 0.2);
+    std_mean_returns_scale ~ normal(0.0, 0.2);
     std_mean_returns ~ normal(std_mean_returns_location, std_mean_returns_scale);
 
     std_volatilities_scale ~ normal(0.0, 10.0);
