@@ -55,6 +55,7 @@ stan_targets <- list(
         stan_files = c(
             complete_pooling = "stan/complete-pooling.stan",
             partial_pooling = "stan/partial-pooling.stan",
+            correlated_complete_pooling = "stan/correlated-complete-pooling.stan",
             correlated_partial_pooling = "stan/correlated-partial-pooling.stan"
         ),
         data = list(
@@ -64,6 +65,7 @@ stan_targets <- list(
         ),
         quiet = FALSE,
         pedantic = TRUE,
+        include_paths = "stan/",
         iter = ITER_COUNT,
         adapt_iter = ADAPT_ITER_COUNT,
         tol_rel_obj = TOLERANCE,
@@ -76,6 +78,10 @@ stan_targets <- list(
     tar_complement_stan(
         stan,
         partial_pooling
+    ),
+    tar_complement_stan(
+        stan,
+        correlated_complete_pooling
     ),
     tar_complement_stan(
         stan,
@@ -105,6 +111,15 @@ report_targets <- list(
             parameter_plots = stan_parameter_plots_partial_pooling
         ),
         output_file = "../output/partial-pooling-report.html"
+    ),
+    tar_render(
+        correlated_complete_pooling_report,
+        "Rmd/report.Rmd",
+        params = list(
+            parameter_table = stan_parameter_table_correlated_complete_pooling,
+            parameter_plots = stan_parameter_plots_correlated_complete_pooling
+        ),
+        output_file = "../output/correlated-complete-pooling-report.html"
     ),
     tar_render(
         correlated_partial_pooling_report,
