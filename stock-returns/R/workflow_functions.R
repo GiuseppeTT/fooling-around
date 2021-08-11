@@ -77,88 +77,63 @@ slice_returns <- function(
     return(sliced_returns)
 }
 
+anonymize_returns <- function(
+    returns
+) {
+    indices <- seq(ncol(returns))
+    colnames(returns) <- str_glue("returns[{indices}]")
+
+    return(returns)
+}
+
 ## Exploratory -----------------------------------------------------------------
-# plot_observed_returns <- function(
-#     returns
-# ) {
-#     data <-
-#         returns %>%
-#         tidy_returns()
+convert_data_to_draws <- function(
+    data
+) {
+    data %>%
+        as_draws_df() %>%
+        as_tibble() %>%
+        select(.chain, .iteration, .draw, everything()) %>%
+        return()
+}
 
-#     plot <-
-#         data %>%
-#         plot_base_returns()
+convert_data_to_summary <- function(
+    data
+) {
+    data %>%
+        summarise_draws() %>%
+        return()
+}
 
-#     return(plot)
-# }
+plot_observed <- function(
+    data
+) {
+    data <-
+        data %>%
+        gather_variables()
 
-# plot_base_returns <- function(
-#     data
-# ) {
-#     data <-
-#         data %>%
-#         mutate(return = expm1(.value))
+    variable_count <-
+        data %>%
+        pull(.variable) %>%
+        unique() %>%
+        length()
 
-#     plot <-
-#         data %>%
-#         ggplot(aes(x = return, group = stock)) +
-#         geom_density() +
-#         base_theme() +
-#         labs(
-#             title = "Return distributions",
-#             x = "Return",
-#             y = "Density"
-#         )
+    alpha_level <- 50 * 1 / variable_count
+    alpha_level <- min(alpha_level, 1)
 
-#     return(plot)
-# }
+    plot <-
+        data %>%
+        ggplot(aes(x = .value, group = .variable)) +
+        geom_density(color = alpha("black", alpha_level)) +
+        base_theme() +
+        labs(
+            title = "Observed values",
+            x = NULL,
+            y = NULL
+        )
 
-# plot_observed_prices <- function(
-#     returns
-# ) {
-#     data <-
-#         returns %>%
-#         tidy_returns()
-
-#     plot <-
-#         data %>%
-#         plot_base_prices()
-
-#     return(plot)
-# }
-
-# plot_base_prices <- function(
-#     data
-# ) {
-#     data <-
-#         data %>%
-#         group_by(stock) %>%
-#         mutate(price = exp(cumsum(zero_first(.value))))
-
-#     plot <-
-#         data %>%
-#         ggplot(aes(x = time, y = price, group = stock)) +
-#         geom_line() +
-#         scale_y_log10() +
-#         base_theme() +
-#         labs(
-#             title = "Prices",
-#             x = "Time (in trading days)",
-#             y = "Price"
-#         )
-
-#     return(plot)
-# }
-
-# tidy_returns <- function(
-#     returns
-# ) {
-#     returns %>%
-#         as_tibble() %>%
-#         mutate(time = row_number(), .before = everything()) %>%
-#         pivot_longer(!time, names_to = "stock", values_to = ".value") %>%
-#         return()
-# }
+    return(plot)
+}
 
 ## Model -----------------------------------------------------------------------
 filter_parameters <- function(
@@ -234,53 +209,3 @@ plot_parameters <- function(
 
     return(plots)
 }
-
-# plot_sampled_returns <- function(
-#     predictive_sample
-# ) {
-#     data <-
-#         predictive_sample %>%
-#         tidy_predictive_sample()
-
-#     plot <-
-#         data %>%
-#         plot_base_returns()
-
-#     return(plot)
-# }
-
-# plot_sampled_prices <- function(
-#     predictive_sample
-# ) {
-#     data <-
-#         predictive_sample %>%
-#         tidy_predictive_sample()
-
-#     plot <-
-#         data %>%
-#         plot_base_prices()
-
-#     return(plot)
-# }
-
-# tidy_predictive_sample <- function(
-#     predictive_sample
-# ) {
-#     data <-
-#         predictive_sample %>%
-#         tidy_draws() %>%
-#         gather_variables()
-
-#     data <-
-#         data %>%
-#         filter(str_detect(.variable, r"(^returns\[\d+,\d+\]$)"))
-
-#     data <-
-#         data %>%
-#         mutate(
-#             stock = as.numeric(str_match(.variable, r"(returns\[(\d+),(\d+)\])")[, 2]),
-#             time = as.numeric(str_match(.variable, r"(returns\[(\d+),(\d+)\])")[, 3])
-#         )
-
-#     return(data)
-# }

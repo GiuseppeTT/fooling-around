@@ -7,6 +7,12 @@ output:
         toc_float: true
         toc_collapsed: true
 params:
+    predictive_prior_observed_table: NULL
+    predictive_prior_observed_plot: NULL
+    observed_table: NULL
+    observed_plot: NULL
+    predictive_posterior_observed_table: NULL
+    predictive_posterior_observed_plot: NULL
     parameter_table: NULL
     parameter_plots: NULL
 ---
@@ -32,6 +38,108 @@ source("R/auxiliary_functions.R")
 
 ```{r common}
 decimal_count <- tar_read(decimal_count)
+```
+
+
+# Predictive prior
+
+```{r predictive prior observed table}
+params$predictive_prior_observed_table %>%
+    rename(.variable = variable) %>%
+    select(
+        Variable = .variable,
+        Mean = mean,
+        Median = median,
+        MAD = mad,
+        SD = sd,
+        `CI 05%` = q5,
+        `CI 95%` = q95
+    ) %>%
+    datatable(
+        caption = htmltools::tags$caption(
+            "Parameters",
+            style = "text-align: center; font-size: 200%; color: black;",
+        ),
+        rownames = FALSE,
+        filter = "top",
+        options = list(lengthChange = FALSE, searching = FALSE)
+    ) %>%
+    formatPercentage(
+        c("Mean", "Median", "SD", "MAD", "CI 05%", "CI 95%"),
+        digits = decimal_count
+    )
+```
+
+```{r predictive prior observed plot}
+params$predictive_prior_observed_plot
+```
+
+
+# Exploratory analysis
+
+```{r observed summary table}
+params$observed_table %>%
+    rename(.variable = variable) %>%
+    select(
+        Variable = .variable,
+        Mean = mean,
+        Median = median,
+        MAD = mad,
+        SD = sd,
+        `CI 05%` = q5,
+        `CI 95%` = q95
+    ) %>%
+    datatable(
+        caption = htmltools::tags$caption(
+            "Parameters",
+            style = "text-align: center; font-size: 200%; color: black;",
+        ),
+        rownames = FALSE,
+        filter = "top",
+        options = list(lengthChange = FALSE, searching = FALSE)
+    ) %>%
+    formatPercentage(
+        c("Mean", "Median", "SD", "MAD", "CI 05%", "CI 95%"),
+        digits = decimal_count
+    )
+```
+
+```{r observed plot}
+params$observed_plot
+```
+
+
+# Predictive posterior
+
+```{r predictive posterior observed table}
+params$predictive_posterior_observed_table %>%
+    rename(.variable = variable) %>%
+    select(
+        Variable = .variable,
+        Mean = mean,
+        Median = median,
+        MAD = mad,
+        SD = sd,
+        `CI 05%` = q5,
+        `CI 95%` = q95
+    ) %>%
+    datatable(
+        caption = htmltools::tags$caption(
+            "Parameters",
+            style = "text-align: center; font-size: 200%; color: black;",
+        ),
+        rownames = FALSE,
+        filter = "top",
+        options = list(lengthChange = FALSE, searching = FALSE)
+    ) %>%
+    formatPercentage(
+        c("Mean", "Median", "SD", "MAD", "CI 05%", "CI 95%"),
+        digits = decimal_count
+    )
+```
+
+```{r predictive posterior observed plot}
+params$predictive_posterior_observed_plot
 ```
 
 

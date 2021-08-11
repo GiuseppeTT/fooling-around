@@ -7,6 +7,7 @@ library(stantargets)
 library(tidyverse)
 library(lubridate)
 
+library(posterior)
 library(tidybayes)
 
 ## Source auxiliary R files ----------------------------------------------------
@@ -44,19 +45,52 @@ data_targets <- list(
         STOCK_COUNT
     ),
     tar_target(
-        returns,
+        sliced_returns,
         slice_returns(cleaned_returns, time_count, stock_count)
+    ),
+    tar_target(
+        returns,
+        anonymize_returns(sliced_returns)
+    )
+)
+
+exploratory_analysis <- list(
+    tar_target(
+        data_draws_returns,
+        convert_data_to_draws(returns)
+    ),
+    tar_target(
+        data_summary_returns,
+        convert_data_to_summary(returns)
+    ),
+    tar_target(
+        data_observed_plot_returns,
+        plot_observed(data_draws_returns)
     )
 )
 
 stan_targets <- list(
-    tar_stan_vb(
-        stan,
+    tar_stan_mcmc(
+        predictive_prior,
         stan_files = c(
-            complete_pooling = "stan/complete-pooling.stan",
-            partial_pooling = "stan/partial-pooling.stan",
-            correlated_complete_pooling = "stan/correlated-complete-pooling.stan",
-            correlated_partial_pooling = "stan/correlated-partial-pooling.stan"
+            complete_pooling = "stan/complete-pooling/predictive-prior.stan"
+        ),
+        data = list(
+            stock_count = dim(returns)[2]
+        ),
+        quiet = FALSE,
+        pedantic = TRUE,
+        include_paths = "stan/",
+        chains = 1,
+        iter_warmup = 0,
+        iter_sampling = SAMPLE_COUNT,
+        fixed_param = TRUE,
+        diagnostics = FALSE
+    ),
+    tar_stan_vb(
+        model,
+        stan_files = c(
+            complete_pooling = "stan/complete-pooling/model.stan"
         ),
         data = list(
             time_count = dim(returns)[1],
@@ -66,26 +100,39 @@ stan_targets <- list(
         quiet = FALSE,
         pedantic = TRUE,
         include_paths = "stan/",
-        iter = ITER_COUNT,
+        iter = MAX_ITER_COUNT,
         adapt_iter = ADAPT_ITER_COUNT,
         tol_rel_obj = TOLERANCE,
         output_samples = SAMPLE_COUNT
     ),
-    tar_complement_stan(
-        stan,
-        complete_pooling
+    tar_stan_gq(
+        predictive_posterior,
+        stan_files = c(
+            complete_pooling = "stan/complete-pooling/predictive-posterior.stan"
+        ),
+        data = list(
+            stock_count = dim(returns)[2]
+        ),
+        fitted_params = model_vb_complete_pooling,
+        quiet = FALSE,
+        pedantic = TRUE,
+        include_paths = "stan/"
     ),
-    tar_complement_stan(
-        stan,
-        partial_pooling
+    tar_target(
+        predictive_prior_observed_plot_complete_pooling,
+        plot_observed(predictive_prior_draws_complete_pooling)
     ),
-    tar_complement_stan(
-        stan,
-        correlated_complete_pooling
+    tar_target(
+        model_parameter_table_complete_pooling,
+        tidy_stan_summary(model_summary_complete_pooling)
     ),
-    tar_complement_stan(
-        stan,
-        correlated_partial_pooling
+    tar_target(
+        model_parameter_plots_complete_pooling,
+        plot_parameters(tidy_stan_draws(model_draws_complete_pooling))
+    ),
+    tar_target(
+        predictive_posterior_observed_plot_complete_pooling,
+        plot_observed(predictive_posterior_draws_complete_pooling)
     )
 )
 
@@ -95,45 +142,25 @@ report_targets <- list(
         DECIMAL_COUNT
     ),
     tar_render(
-        complete_pooling_report,
+        report_complete_pooling,
         "Rmd/report.Rmd",
         params = list(
-            parameter_table = stan_parameter_table_complete_pooling,
-            parameter_plots = stan_parameter_plots_complete_pooling
+            predictive_prior_observed_table = predictive_prior_summary_complete_pooling,
+            predictive_prior_observed_plot = predictive_prior_observed_plot_complete_pooling,
+            observed_table = data_summary_returns,
+            observed_plot = data_observed_plot_returns,
+            predictive_posterior_observed_table = predictive_posterior_summary_complete_pooling,
+            predictive_posterior_observed_plot = predictive_posterior_observed_plot_complete_pooling,
+            parameter_table = model_parameter_table_complete_pooling,
+            parameter_plots = model_parameter_plots_complete_pooling
         ),
-        output_file = "../output/complete-pooling-report.html"
-    ),
-    tar_render(
-        partial_pooling_report,
-        "Rmd/report.Rmd",
-        params = list(
-            parameter_table = stan_parameter_table_partial_pooling,
-            parameter_plots = stan_parameter_plots_partial_pooling
-        ),
-        output_file = "../output/partial-pooling-report.html"
-    ),
-    tar_render(
-        correlated_complete_pooling_report,
-        "Rmd/report.Rmd",
-        params = list(
-            parameter_table = stan_parameter_table_correlated_complete_pooling,
-            parameter_plots = stan_parameter_plots_correlated_complete_pooling
-        ),
-        output_file = "../output/correlated-complete-pooling-report.html"
-    ),
-    tar_render(
-        correlated_partial_pooling_report,
-        "Rmd/report.Rmd",
-        params = list(
-            parameter_table = stan_parameter_table_correlated_partial_pooling,
-            parameter_plots = stan_parameter_plots_correlated_partial_pooling
-        ),
-        output_file = "../output/correlated-partial-pooling-report.html"
+        output_file = "../output/report/complete-pooling-report.html"
     )
 )
 
 list(
     data_targets,
+    exploratory_analysis,
     stan_targets,
     report_targets
 )
